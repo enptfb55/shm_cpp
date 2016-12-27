@@ -1,2 +1,2 @@
 
-C++ Shared Memory Containers
+C++ POSIX Shared Memory Containers
