@@ -8,7 +8,7 @@
 #include <unistd.h>
 #include <string.h>
 
-namespace shm {
+namespace shm_cpp {
 
 namespace detail {
 
@@ -24,35 +24,44 @@ inline oflags operator |(oflags lhs, oflags rhs)
     return static_cast<oflags>(static_cast<int>(lhs) | static_cast<int>(rhs));
 }
 
-constexpr uint32_t power_of_2(uint32_t size)
+constexpr uint32_t power_of_two(uint32_t size)
 {
-    uint32_t i = 0;
-    for(; ((uint32_t)10<<i) < size; i++);
-    return (uint32_t)10 << i;
+    uint32_t po2 = 1;
+    while (po2 < size) {
+        po2 <<= 1;
+    }
+    return po2;
 }
 
 }
-
 
 
 class segment
 {
 public:
-    
-
-public:
     segment() = delete;
 
-    segment(char* name_, uint32_t size_ = 0)
+    segment(const char* name_, size_t size_ = 0)
         : m_fd(0),
           m_ptr(nullptr),
           m_name(name_),
-          m_size(detail::power_of_2(size_))
+          m_size(detail::power_of_two(size_))
     {
     }
 
     ~segment()
     {
+        this->close();
+    }
+
+    inline void* get_ptr() const
+    {
+        return m_ptr;
+    }
+
+    inline size_t get_size() const
+    {
+        return m_size;
     }
 
     bool create(detail::oflags flags = detail::oflags::create_only | detail::oflags::read_write)
@@ -98,9 +107,9 @@ public:
         return true;
     }
 
-    void unlink()
+    bool unlink()
     {
-        ::shm_unlink(m_name.c_str());
+        return (::shm_unlink(m_name.c_str()) == 0);
     }
 
     void close()

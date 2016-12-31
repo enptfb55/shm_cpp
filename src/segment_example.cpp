@@ -4,26 +4,26 @@
 
 #include <errno.h>
 
-#include "shm_segment.h"
+#include <shm_cpp/segment.h>
 
 void producer()
 {
-    shm::segment segment((char*)"test", 1080);
+    shm_cpp::segment segment("test", 1080);
     if (!segment.create()) {
         std::cerr << "Unable to create segment : " << strerror(errno) << std::endl;
     }
 
-    std::cout << "Successfully created shm::segment" << std::endl;
+    std::cout << "Successfully created shm_cpp::segment" << std::endl;
 }
 
 void consumer()
 {
-    shm::segment segment((char*)"test");
+    shm_cpp::segment segment("test");
     if (!segment.open()) {
         std::cerr << "Unable to create segment : " << strerror(errno) << std::endl;
     }
 
-    std::cout << "Successfully opened shm::segment" << std::endl;
+    std::cout << "Successfully opened shm_cpp::segment" << std::endl;
 }
 
 
