@@ -23,6 +23,8 @@ private:
         ssize_t slot_size;
         ssize_t num_slots;
 
+        char pad[8];
+
         alignas(detail::cache_line_size) volatile uint64_t head;
         alignas(detail::cache_line_size) volatile uint64_t tail;
 
