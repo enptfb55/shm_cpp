@@ -1,33 +1,38 @@
 
 #include <iostream>
 #include <thread>
+#include <mutex>
 #include <sys/time.h>
 
 #include <errno.h>
 
 #include <shm_cpp/spsc_queue.h>
 
-const uint32_t MAX_MSG_SIZE = 100;
+const ssize_t MAX_MSG_SIZE = 100;
+const ssize_t QUEUE_SIZE = 1000;
+const char QUEUE_NAME [] = { "spsc_test" };
 
+std::mutex g_lock;
 
 void producer()
 {
-    shm_cpp::spsc_queue q("spsc_test", 1080);
-    if (!q.create(MAX_MSG_SIZE)) {
-        std::cerr << "Unable to create queue : " << strerror(errno) << std::endl;
+    g_lock.lock();
+    shm_cpp::spsc_queue q(QUEUE_NAME);
+    if (!q.open()) {
+        std::cerr << "Unable to open queue : " << strerror(errno) << std::endl;
         return;
     }
 
-    std::cout << "Successfully created shm_cpp::spsc_queue" << std::endl;
+    std::cout << "Producer successfully opened shm_cpp::spsc_queue (" << QUEUE_NAME << ")" 
+              << std::endl;
 
-    // wait for consumer thread
-    sleep(1);
+    g_lock.unlock();
 
     char buffer[MAX_MSG_SIZE] = {"hello"};
     ssize_t blen = strlen(buffer);
     struct timeval start, end;
     gettimeofday(&start, nullptr);
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < QUEUE_SIZE; i++) {
         while (!q.push(buffer, blen));
         //printf("push cnt %d\n", i);
     }
@@ -37,19 +42,21 @@ void producer()
     long lat = (diff * 1000) / 1000;
     printf("producer: %li ns\n", lat);
 
-    sleep(1);
-    q.destroy();
 }
 
 void consumer()
 {
-    shm_cpp::spsc_queue q("spsc_test");
+    g_lock.lock();
+    shm_cpp::spsc_queue q(QUEUE_NAME);
     if (!q.open()) {
         std::cerr << "Unable to open queue : " << strerror(errno) << std::endl;
         return;
     }
 
-    std::cout << "Successfully opened shm_cpp::spsc_queue" << std::endl;
+    std::cout << "Consumer successfully opened shm_cpp::spsc_queue (" << QUEUE_NAME << ")"
+              << std::endl;
+
+    g_lock.unlock();
 
     char buffer[MAX_MSG_SIZE];
     ssize_t buf_size = 0;
@@ -77,12 +84,25 @@ int main(int argc, char* argv[])
     (void)argc;
     (void)argv;
 
+    shm_cpp::spsc_queue q(QUEUE_NAME, QUEUE_SIZE);
+    if (!q.create(MAX_MSG_SIZE)) {
+        std::cerr << "Unable to create queue : " << strerror(errno) << std::endl;
+        return -1;
+    }
+
+    g_lock.lock();
+
     std::thread producer_thr(producer);
-    sleep(0.1);
     std::thread consumer_thr(consumer);
+
+    sleep(1);
+    g_lock.unlock();
 
     producer_thr.join();
     consumer_thr.join();
+
+
+    q.destroy();
 
     return 0;
 }
