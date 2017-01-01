@@ -3,10 +3,12 @@ project(shm_cpp)
 
 set(WARNING_FLAGS "-Wall -Wextra -Wfatal-errors -Werror")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARNING_FLAGS} -std=c++14 -g")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARNING_FLAGS} -g")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g3")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG -O3")
 set(CMAKE_EXE_LINKER_FLAGS "-g")
+
+set(CMAKE_CXX_STANDARD 14)
 
 find_package(Threads REQUIRED)
 enable_testing()
@@ -15,7 +17,8 @@ find_package(GTest REQUIRED)
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
 set(TARGETS segment_example
-            spsc_queue_example)
+            spsc_queue_example
+            mpsc_queue_example)
 
 foreach(TARGET ${TARGETS})
     add_executable(${TARGET} ${CMAKE_SOURCE_DIR}/src/${TARGET}.cpp)
