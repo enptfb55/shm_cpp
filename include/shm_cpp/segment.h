@@ -76,7 +76,7 @@ public:
         if (ftruncate(m_fd, m_size) == -1)
             return false;
 
-        m_ptr = mmap(nullptr, m_size, PROT_READ|PROT_WRITE, MAP_SHARED, m_fd, 0);
+        m_ptr = mmap64(nullptr, m_size, PROT_READ|PROT_WRITE, MAP_SHARED, m_fd, 0);
         if (m_ptr == nullptr) 
             return false;
 
@@ -97,8 +97,6 @@ public:
             return false;
 
         m_size = file.st_size;
-        if (ftruncate(m_fd, m_size) == -1)
-            return false;
 
         m_ptr = mmap(nullptr, m_size, PROT_READ|PROT_WRITE, MAP_SHARED, m_fd, 0);
         if (m_ptr == nullptr)
